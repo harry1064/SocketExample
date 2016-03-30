@@ -63,4 +63,9 @@
     }
     
 }
+
+- (void) emit:(NSString *) eventName withItems:(NSArray *)items {
+    [self.socket emit:eventName withItems:items];
+}
+
 @end

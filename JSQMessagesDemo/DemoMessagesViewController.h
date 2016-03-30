@@ -44,4 +44,5 @@
 
 - (void)closePressed:(UIBarButtonItem *)sender;
 
+- (void) updateWithEvent:(SocketAnyEvent *)event;
 @end
