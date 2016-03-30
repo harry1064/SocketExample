@@ -20,12 +20,17 @@
 #import "SocketSingelton.h"
 #import "ChatSessionObserver.h"
 #import <SocketIOClientSwift/SocketIOClientSwift-Swift.h>
+
+#define ROOMID @"12-1"
+#define USERID @"12"
+
 NSString * const primaryUser = @"1066";
 NSString * const secondaryUser = @"1067";
 NSString * const serverUrl = @"http://192.168.0.2:8081";
 @implementation DemoMessagesViewController
 {
     SocketIOClient* socket;
+    SocketSingelton *manager;
 }
 #pragma mark - View lifecycle
 
@@ -38,6 +43,10 @@ NSString * const serverUrl = @"http://192.168.0.2:8081";
  *  Customize your layout.
  *  Look at the properties on `JSQMessagesCollectionViewFlowLayout` to see what is possible.
  */
+- (void) loadView {
+    [super loadView];
+    manager = [SocketSingelton sharedManager];
+}
 - (void)viewDidLoad
 {
     [super viewDidLoad];
@@ -53,11 +62,11 @@ NSString * const serverUrl = @"http://192.168.0.2:8081";
 //        self.title = @"Not connected";
 //    }];
 //
-    ChatSessionObserver *observer1 = [[ChatSessionObserver alloc] init];
+
     [SocketSingelton sharedManager].serverUrl = serverUrl;
     [[SocketSingelton sharedManager] initializeSocketWithOptions:@{@"log": @(NO),@"forceWebsockets":@(YES), @"selfSigned":@(NO)}];
     [[SocketSingelton sharedManager] connect];
-    [[SocketSingelton sharedManager] addObserver:observer1];
+    [[SocketSingelton sharedManager] addObserver:self];
 //    [[SocketSingelton sharedManager] removeObserver:observer1];
     
     
@@ -408,24 +417,28 @@ NSString * const serverUrl = @"http://192.168.0.2:8081";
                                              senderDisplayName:senderDisplayName
                                                           date:date
                                                           text:text];
-    NSDictionary *dic =  @{@"messageid": @"12345",
-                           @"type":@"1",
-                           @"userid":primaryUser,
-                           @"roomid":[NSString stringWithFormat:@"%@-6",primaryUser],
-                           @"message":@"Harry: Hey how are you?"};
-    NSError *serr;
+//    NSDictionary *dic =  @{@"messageid": @"12345",
+//                           @"type":@"1",
+//                           @"userid":primaryUser,
+//                           @"roomid":[NSString stringWithFormat:@"%@-6",primaryUser],
+//                           @"message":@"Harry: Hey how are you?"};
+//    NSError *serr;
+//    
+//    NSData *jsonData = [NSJSONSerialization
+//                        dataWithJSONObject:dic options:NSJSONWritingPrettyPrinted error:&serr];
+//    
+//    if (serr)
+//    {
+//        NSLog(@"Error generating json data for send dictionary...");
+//        NSLog(@"Error (%@), error: %@", dic, serr);
+//        return;
+//    }
+//    NSString *textToSend = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+//    [socket emit:@"1" withItems:@[textToSend]];
     
-    NSData *jsonData = [NSJSONSerialization
-                        dataWithJSONObject:dic options:NSJSONWritingPrettyPrinted error:&serr];
-    
-    if (serr)
-    {
-        NSLog(@"Error generating json data for send dictionary...");
-        NSLog(@"Error (%@), error: %@", dic, serr);
-        return;
-    }
-    NSString *textToSend = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
-    [socket emit:@"1" withItems:@[textToSend]];
+    [manager emit:@"1" withItems:@[@{@"roomid" : ROOMID,
+                                     @"userid" : USERID,
+                                     @"message" : text}]];
     
     [self.demoData.messages addObject:message];
     
@@ -766,6 +779,37 @@ NSString * const serverUrl = @"http://192.168.0.2:8081";
         return NO;
     }
     return YES;
+}
+
+#pragma Socket ObserberBase Class method
+
+-(void) updateWithEvent:(SocketAnyEvent *)event {
+    NSLog(@"Method called in %@ for event ============= %@",self.class,event.description);
+    if ([event.event isEqualToString:@"16"]) {
+        [manager emit:@"13" withItems:@[@{@"userid" : USERID}]];
+    }
+    if ([event.event isEqualToString:@"14"]) {
+        [manager emit:@"17" withItems:@[@{@"userid" : USERID,
+                                          @"roomid" : ROOMID,
+                                          @"users" : @[@"13",@"14"]}]];
+    }
+
+    if ([event.event isEqualToString:@"18"]) {
+//        [manager emit:@"1" withItems:@[@{@"roomid" : ROOMID,
+//                                         @"userid" : USERID,
+//                                         @"message" : @"Hello Socket"}]];
+//        NSLog(@"%@", event.description);
+    }
+
+    if ([event.event isEqualToString:@"1"]) {
+        JSQMessage *message = [[JSQMessage alloc] initWithSenderId:kJSQDemoAvatarIdJobs
+                               senderDisplayName:kJSQDemoAvatarDisplayNameJobs
+                               date:[NSDate date]
+                               text:[event.items[0] valueForKey:@"message"]];
+                               [self.demoData.messages addObject:message];
+                               [self finishReceivingMessageAnimated:YES];
+    }
+    
 }
 
 @end

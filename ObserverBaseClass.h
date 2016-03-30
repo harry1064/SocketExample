@@ -7,7 +7,8 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 #import <SocketIOClientSwift/SocketIOClientSwift-Swift.h>
-@interface ObserverBaseClass : NSObject
+@interface ObserverBaseClass : UIViewController
 - (void) updateWithEvent:(SocketAnyEvent *)event;
 @end
