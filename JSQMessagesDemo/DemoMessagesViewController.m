@@ -22,7 +22,7 @@
 #import <SocketIOClientSwift/SocketIOClientSwift-Swift.h>
 NSString * const primaryUser = @"1066";
 NSString * const secondaryUser = @"1067";
-NSString * const serverUrl = @"http://192.168.0.7:4444";
+NSString * const serverUrl = @"http://192.168.0.2:8081";
 @implementation DemoMessagesViewController
 {
     SocketIOClient* socket;

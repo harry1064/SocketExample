@@ -45,5 +45,8 @@
  * @brief This method notify the observer with the event recieved
  */
 - (void) notifyObserver:(SocketAnyEvent *)event;
-
+/*!
+ * @brief This method emit perticular event on the socket
+ */
+- (void) emit:(NSString *) eventName withItems:(NSArray *)items;
 @end
